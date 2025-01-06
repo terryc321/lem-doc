@@ -1,28 +1,56 @@
 
-;; example2 - moves image around LEM buffer
+;; 
+;; silly graphical demo moves an image across screen
+;;
+;; top left to top right then drops down a little and repeats
+;; eventually restart at top again top left
+;;
+;; * requirements *
+;; requires lem 2.0 built with sdl2 library, as this is a graphical demo
+;;
+;; * usage *
+;; requires a running lem instance - ie you can see the lem editor on screen
+;; 
+;;
+;; open this file in either lem or from emacs + sly repl 
+;; C-c C-k compile this file
+;;
+;; then inside lem editor you can run M-x example
+;; should see some graphical nonsense
+;;
+;; pressing q will stop the animation
+;;   to restart it you need to do M-x example again 
+;; pressing w will speed up animation
+;; pressing s will slow down animation
+;;
+;; there is great deal of graphical tearing
+;; speed of animation response is not brilliant
+;; 
+;;
 
-(defpackage :example2
+
+;; fast and loose
+(declaim (optimize (speed 3) (safety 0)))
+
+(defpackage :example3
   (:use :cl
         :lem
         :lem-sdl2)
   (:export #:draw))
   
-(in-package :example2)
+(in-package :example3)
 
-(define-major-mode example2-mode nil
-    (:name "example2"
-     :keymap *example2-mode-keymap*))
+(define-major-mode example-mode nil
+    (:name "example3"
+     :keymap *example-mode-keymap*))
 
-(defvar *example2-buffer*)  ;; where we do all our animation
+(defvar *example-buffer*)  ;; where we do all our animation
 
 
-;; (declaim (type fixnum *point-x*))
-;; (declaim (type fixnum *point-x* *point-y*))
-;; (declaim (type fixnum *point-x-max* *point-y-max*))
-;; (declaim (type fixnum *point-x-min* *point-y-min*))
-;; (declaim (type fixnum *anim-delay* *anim-delay-min* *anim-delay-start*))
-
+(declaim (type fixnum *point-x*))
 (defvar *point-x* 5) ;; where text will be appearing in buffer
+
+
 (defvar *point-y* 5)
 (defvar *point-x-min* 5) ;; where text will be appearing in buffer
 (defvar *point-y-min* 300)  ;; get graphics out way of text
@@ -38,13 +66,18 @@
 (defvar *timer*)  ;; time the animation
 (defvar *playing-p*)
 
+(declaim (type fixnum *point-x* *point-y*))
+(declaim (type fixnum *point-x-max* *point-y-max*))
+(declaim (type fixnum *point-x-min* *point-y-min*))
+(declaim (type fixnum *anim-delay* *anim-delay-min* *anim-delay-start*))
+
 
 
 ;; init will just call reset
 (defun init-player ()
   (setq *playing-p* t) ;; animation is playing
   (setq *anim-delay* *anim-delay-start*)
-  (switch-to-buffer *example2-buffer*) ;; once made buffer switch to it    
+  (switch-to-buffer *example-buffer*) ;; once made buffer switch to it    
   (reset-player))
   
 
@@ -77,7 +110,7 @@
 (defun draw-next ()
   ;; (region
   ;;  (let ((whole-buffer (mark-set-whole-buffer)))
-  ;; (kill-region (region-start *example2-buffer*) (region-end *example2-buffer*))
+  ;; (kill-region (region-start *example-buffer*) (region-end *example-buffer*))
   ;; (delete-line asdf 
   (move-to-line (current-point) 0)
   (insert-string (current-point) (format nil "Please press q or Q to slow animation~%"))
@@ -89,26 +122,26 @@
   (insert-string (current-point) (format nil "Current animation rate is ~a~%" *anim-delay*))
   (newline)
     
-  (lem-sdl2/graphics:clear-drawables *example2-buffer*)
-  ;;(lem-sdl2/graphics:draw-rectangle *example2-buffer* 5 5 200 200 :filled t :color *color-4*)
-  (lem-sdl2/graphics:draw-image *example2-buffer*
+  (lem-sdl2/graphics:clear-drawables *example-buffer*)
+  ;;(lem-sdl2/graphics:draw-rectangle *example-buffer* 5 5 200 200 :filled t :color *color-4*)
+  (lem-sdl2/graphics:draw-image *example-buffer*
                                 *icon-image*
                                 :x *point-x*
                                 :y *point-y*
                                 :width 200
                                 :height 200)
-  (lem-sdl2/graphics:draw-string *example2-buffer*
+  (lem-sdl2/graphics:draw-string *example-buffer*
                                  "Rowan"
                                  10
                                  500
                                  :font *font*
                                  :color *color-1*)
-  (lem-sdl2/graphics:draw-rectangle *example2-buffer* 500 200 500 500 :filled t :color *color-3*)
-  (lem-sdl2/graphics:draw-rectangle *example2-buffer* 100 400 500 500 :filled t :color *color-2*)
+  (lem-sdl2/graphics:draw-rectangle *example-buffer* 500 200 500 500 :filled t :color *color-3*)
+  (lem-sdl2/graphics:draw-rectangle *example-buffer* 100 400 500 500 :filled t :color *color-2*)
   ;; no procedure display-buffer??
   ;; may need to do other things in other buffers
   ;; does it matter if we do drawing in other buffers ? 
-  ;; (switch-to-buffer *example2-buffer*)
+  ;; (switch-to-buffer *example-buffer*)
   ;;(pop-to-buffer buffer)
   ;; display buffer has been deprecated and is no longer available
   ;;(display-buffer buffer)
@@ -131,12 +164,12 @@
   ;; stop old timer
   ;; start a new timer with new anim-delay   
   (stop-timer *timer*)
-  (setq *timer* (start-timer (make-timer (lambda () (update *example2-buffer*))
+  (setq *timer* (start-timer (make-timer (lambda () (update *example-buffer*))
                                          :handle-function (lambda (condition)
                                                             (pop-up-backtrace condition)
                                                             (stop-timer *timer*)))
                              *anim-delay*
-                             :repeat t)))
+                             :repeat nil)))
 
 
 
@@ -152,16 +185,15 @@
   (alter-timer))
 
 
-;; define-key must then call a define-command 
-(define-key *example2-mode-keymap* "q" 'example-quit)
-(define-key *example2-mode-keymap* "a" 'example-insert)
-(define-key *example2-mode-keymap* "Q" 'example-quit)
-(define-key *example2-mode-keymap* "A" 'example-insert)
+(define-key *example-mode-keymap* "q" 'example-quit)
+(define-key *example-mode-keymap* "a" 'example-insert)
+(define-key *example-mode-keymap* "Q" 'example-quit)
+(define-key *example-mode-keymap* "A" 'example-insert)
 
-(define-key *example2-mode-keymap* "w" 'example-slower)
-(define-key *example2-mode-keymap* "s" 'example-faster)
-(define-key *example2-mode-keymap* "W" 'example-slower)
-(define-key *example2-mode-keymap* "S" 'example-faster)
+(define-key *example-mode-keymap* "w" 'example-slower)
+(define-key *example-mode-keymap* "s" 'example-faster)
+(define-key *example-mode-keymap* "W" 'example-slower)
+(define-key *example-mode-keymap* "S" 'example-faster)
 
 
 (defun update (example-buffer)
@@ -172,7 +204,7 @@
     (when shall-update
       ;; clear buffer completely
       (when *erase-buffer-each-frame*
-        (erase-buffer *example2-buffer*))
+        (erase-buffer *example-buffer*))
   
       ;; logic move text around 
       (incf *point-x* *point-x-step*)
@@ -183,30 +215,36 @@
         (setq *point-y* *point-y-min*)
         (setq *point-x* *point-x-min*))
       (draw)
-      )))
+      ;; keep creating a timer on every update ??
+  (setq *timer* (start-timer (make-timer (lambda () (update *example-buffer*))
+                                         :handle-function (lambda (condition)
+                                                            (pop-up-backtrace condition)
+                                                            (stop-timer *timer*)))
+                             *anim-delay*
+                             :repeat nil)))))
 
 
-;; M-x example2 
-(define-command example2 () ()
-  (setq *example2-buffer* (make-buffer "*example2*"))
-  (switch-to-buffer *example2-buffer*)
-  (example2-mode)
+
+
+;; M-x example3 
+(define-command example3 () ()
+  (setq *example-buffer* (make-buffer "*example3*"))
+  (switch-to-buffer *example-buffer*)
+  (example-mode)
   
   
-  (add-hook (variable-value 'kill-buffer-hook :buffer *example2-buffer*)
+  (add-hook (variable-value 'kill-buffer-hook :buffer *example-buffer*)
             #'(lambda (buffer) (declare (ignore buffer)) (example-quit)))
   
   (init-player)
   (draw)
   (setq *playing-p* t)
-  (setq *timer* (start-timer (make-timer (lambda () (update *example2-buffer*))
+  (setq *timer* (start-timer (make-timer (lambda () (update *example-buffer*))
                                          :handle-function (lambda (condition)
                                                             (pop-up-backtrace condition)
                                                             (stop-timer *timer*)))
                              *anim-delay*
-                             :repeat t)))
+                             :repeat nil)))
 
-;;(example2:draw)
-
-
+;;(example3:draw)
 

@@ -1,3 +1,19 @@
+# useful features of lem
+
+
+
+# dashboard
+
+this is the lem welcome screen 
+
+M-x open-dashboard
+
+suppress dashboard by ? 
+
+# docs
+
+M-x open-lem-docs
+
 # missing features 
 
 no shell in lem no M-x shell 
