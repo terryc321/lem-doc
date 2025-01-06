@@ -1,0 +1,21 @@
+
+example 01 is to display welcome screen 
+
+issues 
+
+how do we display the buffer ? no display-buffer procedure are we missing a package ?
+
+look into git history log using this 
+> git log -S "display-buffer"
+
+we found diplay-buffer replaced with pop-to-buffer
+========================================================
+commit c91db8cfa98b9eba8d87dd8f4f13abf6c6aa2433
+Author: cxxxr <g23tlm@gmail.com>
+Date:   Thu Jul 6 00:44:43 2023 +0900
+
+    Replace calls to display-buffer with pop-to-buffer
+
+========================================================
+
+
